@@ -17,7 +17,7 @@ import os
 import numpy as np
 from google import genai
 from services.embedder import embed_query, embed_documents
-from services.searcher import search_by_section
+from services.searcher import search_by_section_preembedded
 
 _client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY", ""))
 
@@ -52,24 +52,44 @@ async def compute_fit_score(
             "section_scores": dict  # per-section cosine scores
         }
     """
+    # 1. Embed job description once
     jd_embedding = embed_query(job_description)
 
-    section_scores: dict[str, float] = {}
-    evidence_snippets: list[str] = []
-
+    # 2. Fetch chunks for all sections using pre-embedded query
+    section_chunks = {}
     for section in SECTION_WEIGHTS:
-        chunks = await search_by_section(
+        chunks = await search_by_section_preembedded(
             query=job_description,
+            query_embedding=jd_embedding,
             user_id=user_id,
             section=section,
             match_count=3,
         )
+        section_chunks[section] = chunks
+
+    # 3. Gather all chunk texts and batch embed them in a single Voyage call
+    all_texts = []
+    for section, chunks in section_chunks.items():
+        for c in chunks:
+            all_texts.append(c["content"])
+
+    embeddings_map = {}
+    if all_texts:
+        embeddings = embed_documents(all_texts)
+        embeddings_map = {text: emb for text, emb in zip(all_texts, embeddings)}
+
+    # 4. Calculate similarities per section
+    section_scores: dict[str, float] = {}
+    evidence_snippets: list[str] = []
+
+    for section in SECTION_WEIGHTS:
+        chunks = section_chunks.get(section, [])
         if not chunks:
             section_scores[section] = 0.0
             continue
 
         chunk_texts = [c["content"] for c in chunks]
-        chunk_embeddings = embed_documents(chunk_texts)
+        chunk_embeddings = [embeddings_map[text] for text in chunk_texts]
 
         sims = [_cosine(jd_embedding, emb) for emb in chunk_embeddings]
         section_scores[section] = float(np.mean(sims))
@@ -94,11 +114,16 @@ async def compute_fit_score(
         "In exactly ONE sentence, explain why this score makes sense, "
         "highlighting the strongest match or biggest gap."
     )
-    gemini_response = _client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=explanation_prompt,
-    )
-    explanation = (gemini_response.text or "").strip()
+    
+    # Simple fallback in case Gemini rate limit hits
+    try:
+        gemini_response = _client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=explanation_prompt,
+        )
+        explanation = (gemini_response.text or "").strip()
+    except Exception as e:
+        explanation = f"Fit score computed programmatically is {score_int}/100. (AI explanation temporarily unavailable due to rate limits)"
 
     return {
         "score": score_int,
