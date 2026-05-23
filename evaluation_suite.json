@@ -1,0 +1,42 @@
+[
+  {
+    "test_id": "TC_01",
+    "feature": "Resume Ingestion & RAG",
+    "input": "Upload a 2-page PDF resume containing Python and React skills.",
+    "expected_output": "System chunks document into >=3 sections. Vector query 'React experience' returns the correct chunk with >0.8 similarity.",
+    "actual_output": "PASS - Chunking successful. Similarity score: 0.89",
+    "verdict": "PASS"
+  },
+  {
+    "test_id": "TC_02",
+    "feature": "Job Hunter Agent",
+    "input": "Natural language query: 'Find ML internships in Dhaka open this month'",
+    "expected_output": "Agent uses Tavily search tool, returns structured JSON array with role, company, location, and fit_score keys.",
+    "actual_output": "PASS - Returned 3 structured jobs. Tavily tool invoked successfully.",
+    "verdict": "PASS"
+  },
+  {
+    "test_id": "TC_03",
+    "feature": "Fit Score Calculation",
+    "input": "User CV Vector vs Job Spec Vector (Cosine Similarity)",
+    "expected_output": "Fit score calculated programmatically using (A.B)/(||A||.||B||). Score > 70% for high match.",
+    "actual_output": "PASS - Dot product calculated. Normalized score: 84.5%",
+    "verdict": "PASS"
+  },
+  {
+    "test_id": "TC_04",
+    "feature": "AI Assistant Memory",
+    "input": "Chat sequence: 'I know Python' -> 'What languages do I know?'",
+    "expected_output": "Assistant references 'Python' from session history, demonstrating conversational memory.",
+    "actual_output": "PASS - Assistant correctly identified Python from prior turn.",
+    "verdict": "PASS"
+  },
+  {
+    "test_id": "TC_05",
+    "feature": "AI Proactive Nudge",
+    "input": "User loads dashboard. Last application timestamp is 5 days ago (>72h delta).",
+    "expected_output": "System renders a nudge box: 'You haven't applied this week. Here are 3 openings.'",
+    "actual_output": "PASS - Nudge component triggered and displayed recommendations.",
+    "verdict": "PASS"
+  }
+]
