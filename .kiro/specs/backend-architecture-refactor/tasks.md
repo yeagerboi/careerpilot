@@ -9,7 +9,7 @@ The implementation follows a four-phase incremental migration strategy to mainta
 ## Tasks
 
 - [ ] 1. Phase 1: Foundation - Database Client and Directory Structure
-  - [ ] 1.1 Create db/ directory and database client module
+  - [-] 1.1 Create db/ directory and database client module
     - Create `backend/db/` directory
     - Create `backend/db/supabase.py` with singleton Supabase client using `SUPABASE_SERVICE_ROLE_KEY`
     - Add URL normalization logic to remove trailing `/rest/v1/` or `/rest/v1`
