@@ -13,7 +13,7 @@ Usage:
 """
 
 import os
-from supabase._async.client import create_client, AsyncClient
+from supabase._async.client import AsyncClient
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -33,4 +33,4 @@ elif SUPABASE_URL.endswith("/rest/v1"):
 # Create singleton Supabase async client instance
 # This client uses the service role key for full database access (bypasses RLS)
 # WARNING: Only use this client in backend services, never expose to frontend
-supabase: AsyncClient = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+supabase: AsyncClient = AsyncClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)

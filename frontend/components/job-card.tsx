@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { FitScoreBadge } from "./fit-score-badge";
 import { MapPin, Building, ExternalLink } from "lucide-react";
 import type { Job } from "@/types";
@@ -52,11 +52,14 @@ export function JobCard({ job }: { job: Job }) {
         <span className="text-xs text-muted-foreground uppercase tracking-wider">
           {job.source}
         </span>
-        <Button asChild variant="outline" size="sm">
-          <a href={job.url} target="_blank" rel="noopener noreferrer">
-            Apply <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-          </a>
-        </Button>
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          Apply <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+        </a>
       </CardFooter>
     </Card>
   );

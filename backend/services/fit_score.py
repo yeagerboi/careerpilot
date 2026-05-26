@@ -15,12 +15,19 @@ NEVER ask the LLM to guess a score.
 
 import os
 import numpy as np
-from groq import Groq
+from google import genai
 from services.embedder import embed_query, embed_documents
 from services.searcher import search_by_section_preembedded
 
-_groq = Groq(api_key=os.environ.get("GROQ_API_KEY", ""))
-_MODEL = "llama-3.3-70b-versatile"
+_GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+_gemini_client = None
+
+
+def _get_gemini_client():
+    global _gemini_client
+    if _gemini_client is None:
+        _gemini_client = genai.Client(api_key=_GOOGLE_API_KEY)
+    return _gemini_client
 
 SECTION_WEIGHTS: dict[str, float] = {
     "skills":     0.40,
@@ -106,7 +113,7 @@ async def compute_fit_score(
     )
     score_int = min(100, max(0, round(weighted_score * 100)))
 
-    # Groq one-sentence explanation
+    # Gemini one-sentence explanation
     evidence_text = "\n".join(evidence_snippets) if evidence_snippets else "No CV data available."
     explanation_prompt = (
         f"Job description excerpt: {job_description[:500]}\n\n"
@@ -116,14 +123,14 @@ async def compute_fit_score(
         "highlighting the strongest match or biggest gap."
     )
     
-    # Simple fallback in case Groq rate limit hits
+    # Simple fallback in case Gemini rate limit hits
     try:
-        groq_response = _groq.chat.completions.create(
-            model=_MODEL,
-            messages=[{"role": "user", "content": explanation_prompt}],
-            temperature=0.3,
+        client = _get_gemini_client()
+        gemini_response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=explanation_prompt,
         )
-        explanation = (groq_response.choices[0].message.content or "").strip()
+        explanation = (gemini_response.text or "").strip()
     except Exception as e:
         explanation = f"Fit score computed programmatically is {score_int}/100. (AI explanation temporarily unavailable due to rate limits)"
 

@@ -4,8 +4,7 @@ Hybrid Search Service — CareerPilot
 Always call the hybrid_search stored procedure via Supabase RPC.
 NEVER write raw SQL for search.
 
-Note: The supabase client from db.supabase is synchronous (supabase-py sync client).
-      These functions are defined as async for FastAPI compatibility but use sync calls.
+Uses the async Supabase client from db.supabase.
 """
 
 from db.supabase import supabase
@@ -24,7 +23,7 @@ async def hybrid_search(
     """
     query_embedding = embed_query(query)
 
-    result = supabase.rpc(
+    result = await supabase.rpc(
         "hybrid_search",
         {
             "query_embedding": query_embedding,
@@ -68,7 +67,7 @@ async def search_by_section_preembedded(
     Run hybrid search filtered to a specific CV section using a pre-computed embedding.
     This saves Voyage AI API calls.
     """
-    result = supabase.rpc(
+    result = await supabase.rpc(
         "hybrid_search",
         {
             "query_embedding": query_embedding,
